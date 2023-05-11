@@ -12,9 +12,13 @@ edition = "2021"
 [dependencies]
 bitvec = "1.0.1"
 simd-adler32 = {git="https://github.com/marcantoinem/simd-adler32/", rev = "347b38e44d36a4a0e5eb07e8a7af469d7ec5315e"}
+fxhash = "0.2.1"
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
+
+[profile.bench]
+debug = true
 
 [[bench]]
 name = "rkr-gst-bench"

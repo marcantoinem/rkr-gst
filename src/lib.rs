@@ -1,4 +1,5 @@
 use bitvec::prelude::*;
+use fxhash::FxBuildHasher;
 use simd_adler32::Adler32;
 use std::collections::HashMap;
 
@@ -21,7 +22,8 @@ struct RkrGst<'a> {
 impl<'a> RkrGst<'a> {
     fn scan_pattern(&mut self, search_length: usize) -> usize {
         // map text hashes => text index
-        let mut map: HashMap<u32, Vec<usize>> = HashMap::new();
+        let mut map: HashMap<u32, Vec<usize>, FxBuildHasher> =
+            HashMap::with_hasher(FxBuildHasher::default());
         let mut i = 0;
         while (i + search_length) <= self.text.len() {
             // jump to first unmarked token
@@ -53,7 +55,6 @@ impl<'a> RkrGst<'a> {
                 hash.write(&self.text[i + search_length - 1..i + search_length]);
             }
         }
-
         // search patterns
         self.matches.clear();
         let mut max_match = 0;
