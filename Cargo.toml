@@ -10,5 +10,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-adler32 = "1.2.0"
 bitvec = "1.0.1"
+simd-adler32 = {git="https://github.com/marcantoinem/simd-adler32/", rev = "347b38e44d36a4a0e5eb07e8a7af469d7ec5315e"}
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+
+[[bench]]
+name = "rkr-gst-bench"
+harness = false

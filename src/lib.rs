@@ -1,5 +1,5 @@
-use adler32::RollingAdler32;
 use bitvec::prelude::*;
+use simd_adler32::Adler32;
 use std::collections::HashMap;
 
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
@@ -36,23 +36,21 @@ impl<'a> RkrGst<'a> {
             }
 
             // text[i..i+search_length] is unmarked
-            let mut hash = RollingAdler32::new();
-            for j in i..(i + search_length) {
-                hash.update(self.text[j]);
-            }
+            let mut hash = Adler32::new();
+            hash.write(&self.text[i..(i + search_length)]);
 
             // advance until next marked
             loop {
                 if self.text_mark[i + search_length - 1] {
                     break;
                 }
-                map.entry(hash.hash()).or_insert_with(Vec::new).push(i);
+                map.entry(hash.finish()).or_insert_with(Vec::new).push(i);
                 i += 1;
                 if i + search_length > self.text.len() {
                     break;
                 }
                 hash.remove(search_length, self.text[i - 1]);
-                hash.update(self.text[i + search_length - 1]);
+                hash.write(&self.text[i + search_length - 1..i + search_length]);
             }
         }
 
@@ -73,20 +71,18 @@ impl<'a> RkrGst<'a> {
             }
 
             // pattern[i..i+search_length] is unmarked
-            let mut hash = RollingAdler32::new();
-            for j in i..(i + search_length) {
-                hash.update(self.pattern[j]);
-            }
+            let mut hash = Adler32::new();
+            hash.write(&self.pattern[i..(i + search_length)]);
 
             // advance until next marked
             loop {
                 if self.pattern_mark[i + search_length - 1] {
                     break;
                 }
-                if map.contains_key(&hash.hash()) {
+                if map.contains_key(&hash.finish()) {
                     // found a match, check that it really matches
                     // and try to extend
-                    for text_index in &map[&hash.hash()] {
+                    for text_index in &map[&hash.finish()] {
                         let pattern_index = i;
                         let mut k = 0;
                         while *text_index + k < self.text.len()
@@ -118,7 +114,7 @@ impl<'a> RkrGst<'a> {
                     break;
                 }
                 hash.remove(search_length, self.pattern[i - 1]);
-                hash.update(self.pattern[i + search_length - 1]);
+                hash.write(&self.pattern[(i + search_length - 1)..(i + search_length)]);
             }
         }
 
